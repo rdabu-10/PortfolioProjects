@@ -1,0 +1,65 @@
+Select *
+From `just-inverter-346320.PortfolioProject.coviddeaths`
+
+--
+
+Select location, date, total_cases, new_cases, total_deaths, population
+From `just-inverter-346320.PortfolioProject.coviddeaths`
+Order by 1,2
+
+-- Looking at Total Cases vs. Total Deaths
+
+Select location, date, total_cases, total_deaths, (total_deaths/total_cases)*100 as death_percentage
+FROM `just-inverter-346320.PortfolioProject.coviddeaths`
+Order by 1,2
+
+-- Looking at Total Cases vs. Population
+
+Select location, date, total_cases, population, (total_cases/population)*100 as percent_population_infected
+From `just-inverter-346320.PortfolioProject.coviddeaths`
+Order by 1,2
+
+-- Looking at Countries with Highest Infection Rate compared to Population
+
+Select location, population, MAX(total_cases) as highest_infection_count, MAX((total_cases/population))*100 as percent_population_infected
+From `just-inverter-346320.PortfolioProject.coviddeaths`
+Group By 1,2
+Order by percent_population_infected DESC
+
+-- Looking at Countries with Highest Death Count compared to Population
+
+Select location, MAX(cast(total_deaths as int)) as total_death_count
+From `just-inverter-346320.PortfolioProject.coviddeaths`
+Where continent is NOT NULL
+Group By location
+Order by total_death_count DESC
+
+
+
+--BREAKING THINGS DOWN BY CONTINENT
+
+--Looking at Continents with highest death count per population
+
+Select continent, MAX(cast(total_deaths as int)) as total_death_count
+From `just-inverter-346320.PortfolioProject.coviddeaths`
+Where continent is NOT NULL
+Group By continent
+Order by total_death_count DESC
+
+--GLOBAL NUMBERS
+
+Select SUM(new_cases) as total_cases, SUM(cast(new_deaths as int)) as total_deaths, SUM(cast(new_deaths as int))/SUM(New_Cases)*100 as DeathPercentage
+From `just-inverter-346320.PortfolioProject.coviddeaths`
+Where continent is not null 
+Order by 1,2
+
+--Looking at Total Population vs Vaccinations
+
+Select dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations
+, SUM(vac.new_vaccinations) OVER (Partition by dea.location Order by dea.location, dea.date) as rolling_people_vax
+From `just-inverter-346320.PortfolioProject.coviddeaths` dea
+JOIN `just-inverter-346320.PortfolioProject.covidvaccinations` vac
+    on dea.location = vac.location 
+    and dea.date = vac.date
+Where dea.continent is not null
+Order by 2,3
